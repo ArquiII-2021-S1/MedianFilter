@@ -1,4 +1,4 @@
-libs = -lpng -lgsl -fopenmp
+libs = -lpng -fopenmp
 all: median_filter
 .PHONY: all
 

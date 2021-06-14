@@ -1,9 +1,31 @@
 #include <stdio.h>
+
 #include <omp.h>
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_sort_vector.h>
+
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "handle_image.c"
+
+struct stat st = {0};
+
+
+void bubble_sort(int n, int array[n]) 
+{
+    int temp;
+
+    //Sort the array in ascending order    
+    for (int i = 0; i < n; i++) {     
+        for (int j = i+1; j < n; j++) {     
+           if(array[i] > array[j]) {    
+               temp = array[i];    
+               array[i] = array[j];    
+               array[j] = temp;    
+           }     
+        }     
+    }    
+}
+
 
 /**
  * This function searchs the median value for a specific pixel in (i,j)
@@ -34,7 +56,8 @@ int get_median_value(Image image, int i, int j, int window_size)
     if (y_end >= image.cols)
         y_end = image.cols - 1; // Check down limit
 
-    gsl_vector *neighborhood = gsl_vector_alloc((x_end - x_start + 1) * (y_end - y_start + 1));
+    int elements = (x_end - x_start + 1) * (y_end - y_start + 1);
+    int *neighborhood = (int*) malloc(sizeof(int)*elements);
     int counter = 0;
 
     for (int x = x_start; x <= x_end; x++)
@@ -45,16 +68,16 @@ int get_median_value(Image image, int i, int j, int window_size)
             int pixel = image.data[x][y];
 
             // Stores it in the neighborhood
-            gsl_vector_set(neighborhood, counter, pixel);
+            neighborhood[counter] = pixel;
             counter++;
         }
     }
 
     // Sorts the elements of neighborhood into ascending numerical order
-    gsl_sort_vector(neighborhood);
+    bubble_sort(elements, neighborhood);
 
     // Gets median value
-    int median = gsl_vector_get(neighborhood, neighborhood->size / 2);
+    int median = neighborhood[elements / 2];
 
     free(neighborhood);
     return median;
@@ -69,10 +92,13 @@ int get_median_value(Image image, int i, int j, int window_size)
  *              4 -> 9 x 9 window 
  * returns: gsl_matrix with the filtered image
 */
-gsl_matrix *median_filter(Image image, int window_size)
+Image median_filter(Image image, int window_size)
 {
     // Create new matrix to store the filtered image
-    gsl_matrix *filtered = gsl_matrix_alloc(image.rows, image.cols);
+    Image filtered;
+    filtered.data = createMatrix(image.rows, image.cols);
+    filtered.rows = image.rows;
+    filtered.cols = image.cols;
 
     #pragma omp parallel
     {
@@ -84,7 +110,7 @@ gsl_matrix *median_filter(Image image, int window_size)
             {
                 int median = get_median_value(image, i, j, window_size);
 
-                gsl_matrix_set(filtered, i, j, median);
+                filtered.data[i][j] = median;
             }
         }
     }
@@ -94,28 +120,40 @@ gsl_matrix *median_filter(Image image, int window_size)
 
 int main()
 {
-    Image image = read_image("../noise/ruido.png");
-    //gsl_matrix *image = read_image("../noise/beach.png");
+    // Creates Filtered folder if it doesnt exist
+    if (stat("../filtered", &st) == -1) 
+    {
+        mkdir("../filtered", 0700);
+    }
 
     double start_time, run_time;
     start_time = omp_get_wtime();
 
-    gsl_matrix *filtered_image = median_filter(image, 2);
+    #pragma omp parallel
+    {
+        // Iterates over the image to calculate the median values
+        #pragma omp for
+        for (int i = 0; i < 250; i++)
+        {
+            char filename[30];
+
+            snprintf(filename, 30, "../video/frame%d.png", i); // puts string into buffer
+
+            Image image = read_image(filename);
+
+            Image filtered_image = median_filter(image, 2);
+
+            snprintf(filename, 30, "../filtered/frame%d.png", i); // puts string into buffer
+            write_image(filename, filtered_image);
+
+            free_image(image);
+            free_image(filtered_image);
+            printf("Frame %d procesado.\n", i);
+        }
+    }
 
     run_time = omp_get_wtime() - start_time;
     printf("Tiempo: %f\n", run_time);
-
-    write_image("filtered.png", filtered_image);
-
-    /*for (int i = 0; i < image.rows; i++)
-    {
-        for (int j = 0; j < image.cols; j++)
-        {
-            int pixel = gsl_matrix_get(image, i, j);
-            printf("%d ", pixel);
-        }
-        printf("\n");
-    }*/
-
+    
     return 0;
 }

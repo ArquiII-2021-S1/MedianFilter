@@ -10,30 +10,33 @@
  * Funcion leer una imagen png
  * filepath: ruta de la imagen
  * return: matriz de c con la representacion de la imagen
-*/ 
-Image read_image(char* filepath) {
+*/
+Image read_image(char *filepath)
+{
     FILE *pFile = fopen(filepath, "rb");
-    if(!pFile) {
+    if (!pFile)
+    {
         printf("Error al leer el archivo %s\n", filepath);
         exit(1);
     }
     // Se leen los primeros 8 bits del archivo para
     // verificar que sea una imagen en formato png
-    int len = 8; // Largo del buffer
-    char header[len]; // Buffer
+    int len = 8;                  // Largo del buffer
+    char header[len];             // Buffer
     fread(header, 1, len, pFile); // Lectura de los primeros 8 bits
-    int is_png = !png_sig_cmp(header, 0, len); 
-    if (!is_png) {
+    int is_png = !png_sig_cmp(header, 0, len);
+    if (!is_png)
+    {
         printf("Archivo %s no es una imagen en formato png\n", filepath);
         fclose(pFile);
-        remove(filepath); // Se elimina el archivo de la carpeta de procesamineto
         exit(1);
     }
 
     // Creacion de la estructura de lectura
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     png_infop info_ptr = png_create_info_struct(png_ptr);
-    if(setjmp(png_jmpbuf(png_ptr))) {
+    if (setjmp(png_jmpbuf(png_ptr)))
+    {
         printf("Error al obtener la informacion del archivo %s\n", filepath);
         fclose(pFile);
         exit(1);
@@ -50,25 +53,29 @@ Image read_image(char* filepath) {
     png_read_update_info(png_ptr, info_ptr);
 
     // Lectura de los datos
-    if (setjmp(png_jmpbuf(png_ptr))) {
+    if (setjmp(png_jmpbuf(png_ptr)))
+    {
         printf("Error durante la lectura de los pixeles\n");
         fclose(pFile);
         exit(1);
     }
 
     // Memoria para almacenar los pixeles de la imagen
-    png_bytep *row_pointers = (png_bytep*) malloc(sizeof(png_bytep) * height);
-    for (int i = 0; i < height; i++) {
-        row_pointers[i] = (png_byte*) malloc(png_get_rowbytes(png_ptr,info_ptr));
+    png_bytep *row_pointers = (png_bytep *)malloc(sizeof(png_bytep) * height);
+    for (int i = 0; i < height; i++)
+    {
+        row_pointers[i] = (png_byte *)malloc(png_get_rowbytes(png_ptr, info_ptr));
     }
 
-    int** data = createMatrix(width, height);
+    int **data = createMatrix(width, height);
     // Lectura de los pixeles
     png_read_image(png_ptr, row_pointers);
-    for (int y = 0; y < height; y++) {
-        png_byte* row = row_pointers[y];
-        for (int x = 0; x < width; x++) {
-            png_byte* pixel = &(row[x*channels]);
+    for (int y = 0; y < height; y++)
+    {
+        png_byte *row = row_pointers[y];
+        for (int x = 0; x < width; x++)
+        {
+            png_byte *pixel = &(row[x * channels]);
             // Lectura del pixel, se guarda en la posicion correspondiente en data
             data[x][y] = pixel[0];
         }
@@ -82,18 +89,18 @@ Image read_image(char* filepath) {
 
     // Limpieza de memoria
     fclose(pFile);
-    for (int i = 0; i < height; i++) free(row_pointers[i]);
+    for (int i = 0; i < height; i++)
+        free(row_pointers[i]);
     free(row_pointers);
 
     return image;
 }
 
-
 /**
  * Funcion que escribe una imagen en un archivo .png
  * image: struct de tipo Image con la informacion de la imagen a escribir
 */
-void write_image(char *filename, gsl_matrix *image)
+void write_image(char *filename, Image image)
 {
     FILE *fp = NULL;
     png_structp png_ptr = NULL;
@@ -134,23 +141,22 @@ void write_image(char *filename, gsl_matrix *image)
     png_init_io(png_ptr, fp);
 
     // Write header (8 bit colour depth)
-    png_set_IHDR(png_ptr, info_ptr, image->size1, image->size2,
+    png_set_IHDR(png_ptr, info_ptr, image.rows, image.cols,
                  8, PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
     png_write_info(png_ptr, info_ptr);
 
     // Allocate memory for one row (1 byte per pixel - RGB)
-    row = (png_bytep)malloc(image->size1 * sizeof(png_byte));
+    row = (png_bytep)malloc(image.rows * sizeof(png_byte));
 
     // Write image data
-    for (int y = 0; y < image->size2; y++)
+    for (int y = 0; y < image.cols; y++)
     {
-        for (int x = 0; x < image->size1; x++)
+        for (int x = 0; x < image.rows; x++)
         {
             png_byte *pixel = &(row[x]);
-            int value = gsl_matrix_get(image, x, y);
-            *pixel = value;
+            *pixel = image.data[x][y];
         }
         png_write_row(png_ptr, row);
     }
