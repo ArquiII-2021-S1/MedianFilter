@@ -2,41 +2,28 @@
 #include <string.h>
 #include <png.h>
 #include <stdlib.h>
-#include <gsl/gsl_matrix.h>
 
-gsl_matrix *transpose(gsl_matrix *matrix)
-{
-    gsl_matrix *transposed = gsl_matrix_alloc(matrix->size2, matrix->size1);
+#include "matrix.c"
+#include "image.c"
 
-    for (int j = 0; j < matrix->size2; j++)
-    {
-        // Get column view of the matrix
-        gsl_vector_view vec_view = gsl_matrix_column(matrix, j);
-        gsl_vector *vector = &vec_view.vector;
-
-        // Copy the column values into the row
-        gsl_matrix_set_row(transposed, j, vector);
-    }
-
-    return transposed;
-}
-
-gsl_matrix *read_image(char *filepath)
-{
+/**
+ * Funcion leer una imagen png
+ * filepath: ruta de la imagen
+ * return: matriz de c con la representacion de la imagen
+*/ 
+Image read_image(char* filepath) {
     FILE *pFile = fopen(filepath, "rb");
-    if (!pFile)
-    {
+    if(!pFile) {
         printf("Error al leer el archivo %s\n", filepath);
         exit(1);
     }
     // Se leen los primeros 8 bits del archivo para
     // verificar que sea una imagen en formato png
-    int len = 8;                  // Largo del buffer
-    char header[len];             // Buffer
+    int len = 8; // Largo del buffer
+    char header[len]; // Buffer
     fread(header, 1, len, pFile); // Lectura de los primeros 8 bits
-    int is_png = !png_sig_cmp(header, 0, len);
-    if (!is_png)
-    {
+    int is_png = !png_sig_cmp(header, 0, len); 
+    if (!is_png) {
         printf("Archivo %s no es una imagen en formato png\n", filepath);
         fclose(pFile);
         remove(filepath); // Se elimina el archivo de la carpeta de procesamineto
@@ -46,8 +33,7 @@ gsl_matrix *read_image(char *filepath)
     // Creacion de la estructura de lectura
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     png_infop info_ptr = png_create_info_struct(png_ptr);
-    if (setjmp(png_jmpbuf(png_ptr)))
-    {
+    if(setjmp(png_jmpbuf(png_ptr))) {
         printf("Error al obtener la informacion del archivo %s\n", filepath);
         fclose(pFile);
         exit(1);
@@ -64,45 +50,44 @@ gsl_matrix *read_image(char *filepath)
     png_read_update_info(png_ptr, info_ptr);
 
     // Lectura de los datos
-    if (setjmp(png_jmpbuf(png_ptr)))
-    {
+    if (setjmp(png_jmpbuf(png_ptr))) {
         printf("Error durante la lectura de los pixeles\n");
         fclose(pFile);
         exit(1);
     }
 
     // Memoria para almacenar los pixeles de la imagen
-    png_bytep *row_pointers = (png_bytep *)malloc(sizeof(png_bytep) * height);
-    for (int i = 0; i < height; i++)
-    {
-        row_pointers[i] = (png_byte *)malloc(png_get_rowbytes(png_ptr, info_ptr));
+    png_bytep *row_pointers = (png_bytep*) malloc(sizeof(png_bytep) * height);
+    for (int i = 0; i < height; i++) {
+        row_pointers[i] = (png_byte*) malloc(png_get_rowbytes(png_ptr,info_ptr));
     }
 
-    // Creacion del struct que almacena la imagen
-    gsl_matrix *image_matrix = gsl_matrix_alloc(height, width);
-
+    int** data = createMatrix(width, height);
     // Lectura de los pixeles
     png_read_image(png_ptr, row_pointers);
-    for (int i = 0; i < height; i++)
-    {
-        png_byte *row = row_pointers[i];
-        for (int j = 0; j < width; j++)
-        {
-            png_byte *pixel = &(row[j * channels]);
+    for (int y = 0; y < height; y++) {
+        png_byte* row = row_pointers[y];
+        for (int x = 0; x < width; x++) {
+            png_byte* pixel = &(row[x*channels]);
             // Lectura del pixel, se guarda en la posicion correspondiente en data
-            double pixel_normalized = pixel[0];
-            gsl_matrix_set(image_matrix, i, j, pixel_normalized);
+            data[x][y] = pixel[0];
         }
     }
 
+    // Creacion del struct que almacena la imagen
+    Image image;
+    image.data = data;
+    image.rows = width;
+    image.cols = height;
+
     // Limpieza de memoria
     fclose(pFile);
-    for (int i = 0; i < height; i++)
-        free(row_pointers[i]);
+    for (int i = 0; i < height; i++) free(row_pointers[i]);
     free(row_pointers);
 
-    return image_matrix;
+    return image;
 }
+
 
 /**
  * Funcion que escribe una imagen en un archivo .png
@@ -110,8 +95,6 @@ gsl_matrix *read_image(char *filepath)
 */
 void write_image(char *filename, gsl_matrix *image)
 {
-    image = transpose(image);
-
     FILE *fp = NULL;
     png_structp png_ptr = NULL;
     png_infop info_ptr = NULL;
