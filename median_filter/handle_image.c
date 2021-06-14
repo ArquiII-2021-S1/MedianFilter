@@ -4,6 +4,22 @@
 #include <stdlib.h>
 #include <gsl/gsl_matrix.h>
 
+gsl_matrix *transpose(gsl_matrix *matrix)
+{
+    gsl_matrix *transposed = gsl_matrix_alloc(matrix->size2, matrix->size1);
+
+    for (int j = 0; j < matrix->size2; j++)
+    {
+        // Get column view of the matrix
+        gsl_vector_view vec_view = gsl_matrix_column(matrix, j);
+        gsl_vector *vector = &vec_view.vector;
+
+        // Copy the column values into the row
+        gsl_matrix_set_row(transposed, j, vector);
+    }
+
+    return transposed;
+}
 
 gsl_matrix *read_image(char *filepath)
 {
@@ -88,71 +104,80 @@ gsl_matrix *read_image(char *filepath)
     return image_matrix;
 }
 
-
 /**
  * Funcion que escribe una imagen en un archivo .png
  * image: struct de tipo Image con la informacion de la imagen a escribir
 */
-void write_image(char* filename, gsl_matrix* image) {
-	FILE *fp = NULL;
-	png_structp png_ptr = NULL;
-	png_infop info_ptr = NULL;
-	png_bytep row = NULL;
-	
-	// Apertura del archivo para escritura
-	fp = fopen(filename, "wb");
-	if (fp == NULL) {
-		fprintf(stderr, "Error al crear el archivo %s para escritura\n", filename);
-		exit(1);
-	}
+void write_image(char *filename, gsl_matrix *image)
+{
+    image = transpose(image);
 
-	// Inicializacion de estructura de escritura
-	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-	if (png_ptr == NULL) {
-		fprintf(stderr, "Could not allocate write struct\n");
-		exit(1);
-	}
+    FILE *fp = NULL;
+    png_structp png_ptr = NULL;
+    png_infop info_ptr = NULL;
+    png_bytep row = NULL;
 
-	// Initialize info structure
-	info_ptr = png_create_info_struct(png_ptr);
-	if (info_ptr == NULL) {
-		fprintf(stderr, "Could not allocate info struct\n");
-		exit(1);
-	}
+    // Apertura del archivo para escritura
+    fp = fopen(filename, "wb");
+    if (fp == NULL)
+    {
+        fprintf(stderr, "Error al crear el archivo %s para escritura\n", filename);
+        exit(1);
+    }
 
-	// Setup Exception handling
-	if (setjmp(png_jmpbuf(png_ptr))) {
-		fprintf(stderr, "Error during png creation\n");
-		exit(1);
-	}
+    // Inicializacion de estructura de escritura
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (png_ptr == NULL)
+    {
+        fprintf(stderr, "Could not allocate write struct\n");
+        exit(1);
+    }
 
-	png_init_io(png_ptr, fp);
+    // Initialize info structure
+    info_ptr = png_create_info_struct(png_ptr);
+    if (info_ptr == NULL)
+    {
+        fprintf(stderr, "Could not allocate info struct\n");
+        exit(1);
+    }
 
-	// Write header (8 bit colour depth)
-	png_set_IHDR(png_ptr, info_ptr, image->size1, image->size2,
-			8, PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE,
-			PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+    // Setup Exception handling
+    if (setjmp(png_jmpbuf(png_ptr)))
+    {
+        fprintf(stderr, "Error during png creation\n");
+        exit(1);
+    }
 
-	png_write_info(png_ptr, info_ptr);
+    png_init_io(png_ptr, fp);
 
-	// Allocate memory for one row (1 byte per pixel - RGB)
-	row = (png_bytep) malloc(image->size1 * sizeof(png_byte));
+    // Write header (8 bit colour depth)
+    png_set_IHDR(png_ptr, info_ptr, image->size1, image->size2,
+                 8, PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
-	// Write image data
-	for (int y = 0 ; y < image->size2; y++) {
-		for (int x = 0; x < image->size1; x++) {
-			png_byte* pixel = &(row[x]);
-            *pixel = gsl_matrix_get(image, x, y);
-		}
-		png_write_row(png_ptr, row);
-	}
+    png_write_info(png_ptr, info_ptr);
 
-	// End write
-	png_write_end(png_ptr, NULL);
+    // Allocate memory for one row (1 byte per pixel - RGB)
+    row = (png_bytep)malloc(image->size1 * sizeof(png_byte));
+
+    // Write image data
+    for (int y = 0; y < image->size2; y++)
+    {
+        for (int x = 0; x < image->size1; x++)
+        {
+            png_byte *pixel = &(row[x]);
+            int value = gsl_matrix_get(image, x, y);
+            *pixel = value;
+        }
+        png_write_row(png_ptr, row);
+    }
+
+    // End write
+    png_write_end(png_ptr, NULL);
 
     // Limpieza de memoria
-	fclose(fp);
-	png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
-	png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-	free(row);
+    fclose(fp);
+    png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
+    png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+    free(row);
 }

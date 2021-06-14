@@ -4,7 +4,6 @@
 #include <gsl/gsl_sort_vector.h>
 #include "handle_image.c"
 
-
 /**
  * This function searchs the median value for a specific pixel in (i,j)
  * image: gsl_matrix with the original image
@@ -16,7 +15,7 @@
  *              4 -> 9 x 9 window 
  * returns: median value
 */
-int *get_median_value(gsl_matrix *image, int i, int j, int window_size)
+int get_median_value(gsl_matrix *image, int i, int j, int window_size)
 {
     int x_start = i - window_size;
     if (x_start < 0)
@@ -34,7 +33,7 @@ int *get_median_value(gsl_matrix *image, int i, int j, int window_size)
     if (y_end >= image->size2)
         y_end = image->size2 - 1; // Check down limit
 
-    gsl_vector *neighborhood = gsl_vector_alloc((x_end - x_start + 1)*(y_end - y_start + 1));
+    gsl_vector *neighborhood = gsl_vector_alloc((x_end - x_start + 1) * (y_end - y_start + 1));
     int counter = 0;
 
     for (int x = x_start; x <= x_end; x++)
@@ -52,18 +51,50 @@ int *get_median_value(gsl_matrix *image, int i, int j, int window_size)
 
     // Sorts the elements of neighborhood into ascending numerical order
     gsl_sort_vector(neighborhood);
-    
+
     // Gets median value
     int median = gsl_vector_get(neighborhood, neighborhood->size / 2);
 
+    free(neighborhood);
     return median;
+}
+
+/** 
+ * This function applies the median filter to an input image
+ * image: gsl_matrix with the original image
+ * window_size: 1 -> 3 x 3 window
+ *              2 -> 5 x 5 window
+ *              3 -> 7 x 7 window
+ *              4 -> 9 x 9 window 
+ * returns: gsl_matrix with the filtered image
+*/
+gsl_matrix *median_filter(gsl_matrix *image, int window_size)
+{
+    // Create new matrix to store the filtered image
+    gsl_matrix *filtered = gsl_matrix_alloc(image->size1, image->size2);
+
+    // Iterates over the image to calculate the median values
+    for (int i = 0; i < image->size1; i++)
+    {
+        for (int j = 0; j < image->size2; j++)
+        {
+            int median = get_median_value(image, i, j, window_size);
+
+            gsl_matrix_set(filtered, i, j, median);
+        }
+    }
+
+    return filtered;
 }
 
 int main()
 {
-    gsl_matrix *image = read_image("test2.png");
+    gsl_matrix *image = read_image("../noise/ruido.png");
+    //gsl_matrix *image = read_image("../noise/beach.png");
 
-    gsl_vector* neighborhood = get_window_elements(image, 5, 0, 1);
+    gsl_matrix *filtered_image = median_filter(image, 1);
+
+    write_image("filtered.png", filtered_image);
 
     /*for (int i = 0; i < image->size1; i++)
     {
@@ -74,7 +105,6 @@ int main()
         }
         printf("\n");
     }*/
-    
 
     return 0;
 }
