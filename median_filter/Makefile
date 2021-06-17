@@ -1,5 +1,6 @@
 CFLAGS=-Wall -Wextra -g -std=gnu17
-LDLIBS = -lpng -fopenmp -fopenacc
+LDLIBS = -lpng 
+# LDLIBS = -lpng -fopenmp -fopenacc
 
 PROGRAMS= median_filter
 
@@ -10,3 +11,5 @@ median_filter: median_filter.c
 
 clean:
 	$(RM) *.o $(PROGRAMS) &> /dev/null || true
+
+

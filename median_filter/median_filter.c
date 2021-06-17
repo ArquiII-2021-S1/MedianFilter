@@ -1,15 +1,14 @@
 #include <stdio.h>
-
-#include <omp.h>
-
 #include <sys/stat.h>
 #include <unistd.h>
-
 #include "handle_image.c"
+
+// TODO: eliminar pregmas
+
 
 struct stat st = {0};
 
-
+// TODO: cómo se ejecutaría en el GPU?
 void bubble_sort(int n, int array[n]) 
 {
     int temp;
@@ -26,7 +25,7 @@ void bubble_sort(int n, int array[n])
     }    
 }
 
-
+// TODO: separar para cada borde de la imagen y convertir el window_size a una variable de entorno
 /**
  * This function searchs the median value for a specific pixel in (i,j)
  * image: gsl_matrix with the original image
@@ -125,7 +124,7 @@ int main()
     {
         mkdir("../filtered", 0700);
     }
-
+// TODO: quitar funciones de openmp
     double start_time, run_time;
     start_time = omp_get_wtime();
 

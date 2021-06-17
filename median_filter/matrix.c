@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+// TODO: Innecesario, mover a al archivo image.c
 /**
  * Funcion para crear una matriz de C, asignandole espacio en memoria
  * rows: numero de la cantidad de filas
