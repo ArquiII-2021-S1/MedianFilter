@@ -5,24 +5,26 @@
 
 // TODO: eliminar pregmas
 
-
 struct stat st = {0};
 
 // TODO: cómo se ejecutaría en el GPU?
-void bubble_sort(int n, int array[n]) 
+void bubble_sort(int n, int array[n])
 {
     int temp;
 
-    //Sort the array in ascending order    
-    for (int i = 0; i < n; i++) {     
-        for (int j = i+1; j < n; j++) {     
-           if(array[i] > array[j]) {    
-               temp = array[i];    
-               array[i] = array[j];    
-               array[j] = temp;    
-           }     
-        }     
-    }    
+    //Sort the array in ascending order
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = i + 1; j < n; j++)
+        {
+            if (array[i] > array[j])
+            {
+                temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
+            }
+        }
+    }
 }
 
 // TODO: separar para cada borde de la imagen y convertir el window_size a una variable de entorno
@@ -56,7 +58,7 @@ int get_median_value(Image image, int i, int j, int window_size)
         y_end = image.cols - 1; // Check down limit
 
     int elements = (x_end - x_start + 1) * (y_end - y_start + 1);
-    int *neighborhood = (int*) malloc(sizeof(int)*elements);
+    int *neighborhood = (int *)malloc(sizeof(int) * elements);
     int counter = 0;
 
     for (int x = x_start; x <= x_end; x++)
@@ -99,10 +101,10 @@ Image median_filter(Image image, int window_size)
     filtered.rows = image.rows;
     filtered.cols = image.cols;
 
-    #pragma omp parallel
+#pragma omp parallel
     {
-        // Iterates over the image to calculate the median values
-        #pragma omp for collapse(2)
+// Iterates over the image to calculate the median values
+#pragma omp for collapse(2)
         for (int i = 0; i < image.rows; i++)
         {
             for (int j = 0; j < image.cols; j++)
@@ -120,18 +122,18 @@ Image median_filter(Image image, int window_size)
 int main()
 {
     // Creates Filtered folder if it doesnt exist
-    if (stat("../filtered", &st) == -1) 
+    if (stat("../filtered", &st) == -1)
     {
         mkdir("../filtered", 0700);
     }
-// TODO: quitar funciones de openmp
+    // TODO: quitar funciones de openmp
     double start_time, run_time;
     start_time = omp_get_wtime();
 
-    #pragma omp parallel
+#pragma omp parallel
     {
-        // Iterates over the image to calculate the median values
-        #pragma omp for
+// Iterates over the image to calculate the median values
+#pragma omp for
         for (int i = 0; i < 250; i++)
         {
             char filename[30];
@@ -153,6 +155,6 @@ int main()
 
     run_time = omp_get_wtime() - start_time;
     printf("Tiempo: %f\n", run_time);
-    
+
     return 0;
 }
