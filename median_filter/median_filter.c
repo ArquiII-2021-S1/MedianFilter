@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "handle_image.c"
+#include <omp.h>
 
 // TODO: eliminar pregmas
 
@@ -119,8 +120,19 @@ Image median_filter(Image image, int window_size)
     return filtered;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+    printf("ARGC: %d\n", argc);
+    if (argc != 3)
+    {
+        printf("error in arguments\n");
+        return 1;
+    }
+
+    const char *input_directory_arg = argv[1];
+    const char *num_arg = argv[2];
+    int num = atol(num_arg);
+
     // Creates Filtered folder if it doesnt exist
     if (stat("../filtered", &st) == -1)
     {
@@ -134,11 +146,11 @@ int main()
     {
 // Iterates over the image to calculate the median values
 #pragma omp for
-        for (int i = 0; i < 250; i++)
+        for (int i = 0; i < num; i++)
         {
             char filename[30];
 
-            snprintf(filename, 30, "../video/frame%d.png", i); // puts string into buffer
+            snprintf(filename, 30, "%s/frame%d.png",input_directory_arg, i); // puts string into buffer
 
             Image image = read_image(filename);
 
