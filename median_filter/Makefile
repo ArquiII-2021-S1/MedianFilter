@@ -1,6 +1,6 @@
 CFLAGS=-Wall -Wextra -g -std=gnu17
-# LDLIBS = -lpng 
-LDLIBS = -lpng -fopenmp -fopenacc
+LDLIBS = -lpng 
+# LDLIBS = -lpng -fopenmp -fopenacc
 
 PROGRAMS= median_filter
 

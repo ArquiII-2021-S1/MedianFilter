@@ -2,9 +2,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "handle_image.c"
-#include <omp.h>
 
-// TODO: eliminar pregmas
 
 struct stat st = {0};
 
@@ -102,10 +100,8 @@ Image median_filter(Image image, int window_size)
     filtered.rows = image.rows;
     filtered.cols = image.cols;
 
-#pragma omp parallel
-    {
+
 // Iterates over the image to calculate the median values
-#pragma omp for collapse(2)
         for (int i = 0; i < image.rows; i++)
         {
             for (int j = 0; j < image.cols; j++)
@@ -115,42 +111,28 @@ Image median_filter(Image image, int window_size)
                 filtered.data[i][j] = median;
             }
         }
-    }
+    
 
     return filtered;
 }
 
-int main(int argc, char *argv[])
-{
-    printf("ARGC: %d\n", argc);
-    if (argc != 3)
-    {
-        printf("error in arguments\n");
-        return 1;
-    }
-
-    const char *input_directory_arg = argv[1];
-    const char *num_arg = argv[2];
-    int num = atol(num_arg);
-
-    // Creates Filtered folder if it doesnt exist
+int process_files(const char *input_directory, int file_amount){
+// Creates Filtered folder if it doesnt exist
     if (stat("../filtered", &st) == -1)
     {
         mkdir("../filtered", 0700);
     }
-    // TODO: quitar funciones de openmp
-    double start_time, run_time;
-    start_time = omp_get_wtime();
 
-#pragma omp parallel
-    {
+    // double start_time, run_time;
+    // start_time = omp_get_wtime();
+
+
 // Iterates over the image to calculate the median values
-#pragma omp for
-        for (int i = 0; i < num; i++)
+        for (int i = 0; i < file_amount; i++)
         {
             char filename[30];
 
-            snprintf(filename, 30, "%s/frame%d.png",input_directory_arg, i); // puts string into buffer
+            snprintf(filename, 30, "%s/frame%d.png",input_directory, i); // puts string into buffer
 
             Image image = read_image(filename);
 
@@ -163,10 +145,37 @@ int main(int argc, char *argv[])
             free_image(filtered_image);
             printf("Frame %d procesado.\n", i);
         }
+}
+
+
+
+int main(int argc, char *argv[])
+{
+    // printf("ARGC: %d\n", argc);
+
+    // TODO: validar argumentos
+
+    if (argc != 3)
+    {
+        printf("error in arguments\n");
+        return 1;
     }
 
-    run_time = omp_get_wtime() - start_time;
-    printf("Tiempo: %f\n", run_time);
+    const char *input_directory_arg = argv[1];
+    const char *num_arg = argv[2];
+    int num = atol(num_arg);
+
+    process_files(input_directory_arg,num);
+
+
+
+
+
+    
+    
+
+    // run_time = omp_get_wtime() - start_time;
+    // printf("Tiempo: %f\n", run_time);
 
     return 0;
 }
