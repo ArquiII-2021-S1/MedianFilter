@@ -1,6 +1,12 @@
-libs = -lpng -fopenmp
-all: median_filter
-.PHONY: all
+CFLAGS=-Wall -Wextra -g -std=gnu17
+LDLIBS = -lpng -fopenmp -fopenacc
+
+PROGRAMS= median_filter
+
+all: $(PROGRAMS)
 
 median_filter: median_filter.c
-	gcc median_filter.c -o median_filter $(libs)
+	$(CC) $(LDFLAGS) median_filter.c $(LDLIBS) -o median_filter
+
+clean:
+	$(RM) *.o $(PROGRAMS) &> /dev/null || true

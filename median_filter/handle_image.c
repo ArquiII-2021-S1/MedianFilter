@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "matrix.c"
-#include "image.c"
+#include "image.c" 
 
 /**
  * Funcion leer una imagen png
