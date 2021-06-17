@@ -59,9 +59,9 @@ int get_median_value(Image image, int i, int j, int window_size)
     int elements = (x_end - x_start + 1) * (y_end - y_start + 1);
     int *neighborhood = (int*) malloc(sizeof(int)*elements);
     int counter = 0;
-
+    
     for (int x = x_start; x <= x_end; x++)
-    {
+    {   
         for (int y = y_start; y <= y_end; y++)
         {
             // Get the (x,y) pixel
@@ -100,20 +100,18 @@ Image median_filter(Image image, int window_size)
     filtered.rows = image.rows;
     filtered.cols = image.cols;
 
-    #pragma omp parallel
+    // Iterates over the image to calculate the median values
+#pragma acc data copy(image), create(filtered)
+#pragma acc kernels
+    for (int i = 0; i < image.rows; i++)
     {
-        // Iterates over the image to calculate the median values
-        #pragma omp for collapse(2)
-        for (int i = 0; i < image.rows; i++)
+        for (int j = 0; j < image.cols; j++)
         {
-            for (int j = 0; j < image.cols; j++)
-            {
-                int median = get_median_value(image, i, j, window_size);
-
-                filtered.data[i][j] = median;
-            }
+            int median = get_median_value(image, i, j, window_size);
+            filtered.data[i][j] = median;
         }
     }
+    
 
     return filtered;
 }
@@ -126,13 +124,11 @@ int main()
         mkdir("../filtered", 0700);
     }
 
+    /*
     double start_time, run_time;
-    start_time = omp_get_wtime();
+    start_time = omp_get_wtime();*/
 
-    //#pragma omp parallel
-    //{
     // Iterates over the image to calculate the median values
-    //#pragma omp for
     for (int i = 0; i < 10; i++)
     {
         char filename[30];
@@ -150,10 +146,10 @@ int main()
         free_image(filtered_image);
         printf("Frame %d procesado.\n", i);
     }
-    //}
 
-    run_time = omp_get_wtime() - start_time;
-    printf("Tiempo: %f\n", run_time);
+
+    /*run_time = omp_get_wtime() - start_time;
+    printf("Tiempo: %f\n", run_time);*/
     
     return 0;
 }
