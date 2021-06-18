@@ -64,15 +64,11 @@ int get_median_value_center(Image *image, int i, int j, int window_size)
             counter++;
         }
     }
-
     // Sorts the elements of neighborhood into ascending numerical order
-    // bubble_sort(NEIGHBORHOOD_SIZE, neighborhood);
     bubble_sort(NEIGHBORHOOD_SIZE, neighborhood);
-   
     // Gets median value
     int median = neighborhood[NEIGHBORHOOD_SIZE / 2];
 
-    // free(neighborhood);
     return median;
 }
 
@@ -94,11 +90,37 @@ Image *median_filter(Image *image, int window_size)
 
     // TODO: separar por esquinas, bordes y centro
     // Iterates over the image to calculate the median values
+    // #pragma omp parallel for collapse(2)
     for (int i = 1; i < IMAGE_M-1; i++)
     {
         for (int j = 1; j < IMAGE_N-1; j++)
         {
-            int median = get_median_value_center(image, i, j, window_size);
+            // int median = get_median_value_center(image, i, j, window_size);
+            int x_start = i - window_size;
+            int x_end = i + window_size;
+            int y_start = j - window_size;
+            int y_end = j + window_size;
+
+            int neighborhood[NEIGHBORHOOD_SIZE];
+            int counter = 0;
+            // TODO: eliminar el contador
+            for (int x = x_start; x <= x_end; x++)
+            {
+                for (int y = y_start; y <= y_end; y++)
+                {
+                    // Get the (x,y) pixel
+                    int pixel = image->data[x][y];
+
+                    // Stores it in the neighborhood
+                    neighborhood[counter] = pixel;
+                    counter++;
+                }
+            }
+            // Sorts the elements of neighborhood into ascending numerical order
+            bubble_sort(NEIGHBORHOOD_SIZE, neighborhood);
+            // Gets median value
+            int median = neighborhood[NEIGHBORHOOD_SIZE / 2];
+
 
             filtered->data[i][j] = median;
         }
@@ -119,6 +141,7 @@ int process_files(const char *input_directory, int file_amount)
     // start_time = omp_get_wtime();
 
     // Iterates over the image to calculate the median values
+    // #pragma omp parallel for
     for (int i = 0; i < file_amount; i++)
     {
         char *filename;

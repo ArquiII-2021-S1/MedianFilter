@@ -1,6 +1,7 @@
 CFLAGS=-Wall -Wextra -g -std=gnu17
-LDLIBS = -lpng 
+# LDLIBS = -lpng 
 # LDLIBS = -lpng -fopenmp -fopenacc
+LDLIBS = -lpng -fopenmp 
 # IMAGE_N=15
 # IMAGE_M=10
 
