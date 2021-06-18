@@ -38,23 +38,23 @@ void bubble_sort(int n, int array[n])
  *              4 -> 9 x 9 window 
  * returns: median value
 */
-int get_median_value(Image image, int i, int j, int window_size)
+int get_median_value(Image*image, int i, int j, int window_size)
 {
     int x_start = i - window_size;
     if (x_start < 0)
         x_start = 0; // Check left limit
 
     int x_end = i + window_size;
-    if (x_end >= image.rows)
-        x_end = image.rows - 1; // Check right limit
+    if (x_end >= image->rows)
+        x_end = image->rows - 1; // Check right limit
 
     int y_start = j - window_size;
     if (y_start < 0)
         y_start = 0; // Check top limit
 
     int y_end = j + window_size;
-    if (y_end >= image.cols)
-        y_end = image.cols - 1; // Check down limit
+    if (y_end >= image->cols)
+        y_end = image->cols - 1; // Check down limit
 
     int elements = (x_end - x_start + 1) * (y_end - y_start + 1);
     int *neighborhood = (int *)malloc(sizeof(int) * elements);
@@ -65,7 +65,7 @@ int get_median_value(Image image, int i, int j, int window_size)
         for (int y = y_start; y <= y_end; y++)
         {
             // Get the (x,y) pixel
-            int pixel = image.data[x][y];
+            int pixel = image->data[x][y];
 
             // Stores it in the neighborhood
             neighborhood[counter] = pixel;
@@ -92,23 +92,26 @@ int get_median_value(Image image, int i, int j, int window_size)
  *              4 -> 9 x 9 window 
  * returns: gsl_matrix with the filtered image
 */
-Image median_filter(Image image, int window_size)
+Image * median_filter(Image *image, int window_size)
 {
     // Create new matrix to store the filtered image
-    Image filtered;
-    filtered.data = createMatrix(image.rows, image.cols);
-    filtered.rows = image.rows;
-    filtered.cols = image.cols;
+
+    // Image filtered;
+    CREATE_IMAGE(filtered)
+    // TODO: cambiar
+    // filtered.data = createMatrix(image.rows, image.cols);
+    // filtered->rows = image.rows;
+    // filtered->cols = image.cols;
 
 
 // Iterates over the image to calculate the median values
-        for (int i = 0; i < image.rows; i++)
+        for (int i = 0; i < image->rows; i++)
         {
-            for (int j = 0; j < image.cols; j++)
+            for (int j = 0; j < image->cols; j++)
             {
                 int median = get_median_value(image, i, j, window_size);
 
-                filtered.data[i][j] = median;
+                filtered->data[i][j] = median;
             }
         }
     
@@ -130,25 +133,28 @@ int process_files(const char *input_directory, int file_amount){
 // Iterates over the image to calculate the median values
         for (int i = 0; i < file_amount; i++)
         {
-            char filename[30];
+            char filename[300];
 
             snprintf(filename, 30, "%s/frame%d.png",input_directory, i); // puts string into buffer
 
-            Image image = read_image(filename);
+            Image * image = read_image(filename);
 
-            Image filtered_image = median_filter(image, 2);
+            Image * filtered_image = median_filter(image, 2);
 
             snprintf(filename, 30, "../filtered/frame%d.png", i); // puts string into buffer
             write_image(filename, filtered_image);
 
-            free_image(image);
-            free_image(filtered_image);
+            // free_image(image);
+            // free_image(filtered_image);
+
+            FREE_IMAGE(image)
+            FREE_IMAGE(filtered_image)
             printf("Frame %d procesado.\n", i);
         }
 }
 
 
-
+// ./median_filter ../../frame 5
 int main(int argc, char *argv[])
 {
     // printf("ARGC: %d\n", argc);
@@ -161,18 +167,16 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    const char *input_directory_arg = argv[1];
+
+    const char *input_directory_arg = strdup(argv[1]);
     const char *num_arg = argv[2];
     int num = atol(num_arg);
 
+    // Image * newImage=malloc(sizeof(Image));
+    CREATE_IMAGE(newImage);
+    printf("cols:%d \n", newImage->cols);
+    // CREATE_IMAGE(newimage);
     process_files(input_directory_arg,num);
-
-
-
-
-
-    
-    
 
     // run_time = omp_get_wtime() - start_time;
     // printf("Tiempo: %f\n", run_time);

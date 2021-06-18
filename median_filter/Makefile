@@ -1,8 +1,13 @@
 CFLAGS=-Wall -Wextra -g -std=gnu17
 LDLIBS = -lpng 
 # LDLIBS = -lpng -fopenmp -fopenacc
+# IMAGE_N=15
+# IMAGE_M=10
 
 PROGRAMS= median_filter
+
+
+
 
 all: $(PROGRAMS)
 

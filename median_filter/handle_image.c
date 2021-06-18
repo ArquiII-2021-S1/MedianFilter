@@ -6,12 +6,15 @@
 #include "matrix.c"
 #include "image.c"
 
+
+
+
 /**
  * Funcion leer una imagen png
  * filepath: ruta de la imagen
  * return: matriz de c con la representacion de la imagen
 */
-Image read_image(char *filepath)
+Image * read_image(char *filepath)
 {
     FILE *pFile = fopen(filepath, "rb");
     if (!pFile)
@@ -67,7 +70,10 @@ Image read_image(char *filepath)
         row_pointers[i] = (png_byte *)malloc(png_get_rowbytes(png_ptr, info_ptr));
     }
 
-    int **data = createMatrix(width, height);
+    // int **data = createMatrix(width, height);
+
+    CREATE_IMAGE(image)
+
     // Lectura de los pixeles
     png_read_image(png_ptr, row_pointers);
     for (int y = 0; y < height; y++)
@@ -77,15 +83,16 @@ Image read_image(char *filepath)
         {
             png_byte *pixel = &(row[x * channels]);
             // Lectura del pixel, se guarda en la posicion correspondiente en data
-            data[x][y] = pixel[0];
+            image->data[x][y] = pixel[0];
         }
     }
 
     // Creacion del struct que almacena la imagen
-    Image image;
-    image.data = data;
-    image.rows = width;
-    image.cols = height;
+    // Image * image;
+    // // TODO: cambiar
+    // // image.data = data;
+    // image.rows = width;
+    // image.cols = height;
 
     // Limpieza de memoria
     fclose(pFile);
@@ -100,7 +107,7 @@ Image read_image(char *filepath)
  * Funcion que escribe una imagen en un archivo .png
  * image: struct de tipo Image con la informacion de la imagen a escribir
 */
-void write_image(char *filename, Image image)
+void write_image(char *filename, Image *image)
 {
     FILE *fp = NULL;
     png_structp png_ptr = NULL;
@@ -141,22 +148,22 @@ void write_image(char *filename, Image image)
     png_init_io(png_ptr, fp);
 
     // Write header (8 bit colour depth)
-    png_set_IHDR(png_ptr, info_ptr, image.rows, image.cols,
+    png_set_IHDR(png_ptr, info_ptr, image->rows, image->cols,
                  8, PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
     png_write_info(png_ptr, info_ptr);
 
     // Allocate memory for one row (1 byte per pixel - RGB)
-    row = (png_bytep)malloc(image.rows * sizeof(png_byte));
+    row = (png_bytep)malloc(image->rows * sizeof(png_byte));
 
     // Write image data
-    for (int y = 0; y < image.cols; y++)
+    for (int y = 0; y < image->cols; y++)
     {
-        for (int x = 0; x < image.rows; x++)
+        for (int x = 0; x < image->rows; x++)
         {
             png_byte *pixel = &(row[x]);
-            *pixel = image.data[x][y];
+            *pixel = image->data[x][y];
         }
         png_write_row(png_ptr, row);
     }
@@ -170,3 +177,4 @@ void write_image(char *filename, Image image)
     png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
     free(row);
 }
+
