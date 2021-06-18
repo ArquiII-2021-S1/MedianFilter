@@ -4,11 +4,9 @@
 #include "handle_image.c"
 
 #define WINDOW_SIZE 1
-#define NEIGHBORHOOD_SIZE ((WINDOW_SIZE*2+1)*(WINDOW_SIZE*2+1))
+#define NEIGHBORHOOD_SIZE ((WINDOW_SIZE * 2 + 1) * (WINDOW_SIZE * 2 + 1))
 
 struct stat st = {0};
-// TODO: eliminar sort y usar funcion para calcular la mediana
-
 // TODO: cómo se ejecutaría en el GPU?
 void bubble_sort(int n, int *array)
 {
@@ -27,8 +25,6 @@ void bubble_sort(int n, int *array)
         }
     }
 }
-
-
 
 /**
  * This function searchs the median value for a specific pixel in (i,j)
@@ -72,7 +68,6 @@ int get_median_value_center(Image *image, int i, int j, int window_size)
     return median;
 }
 
-
 /** 
  * This function applies the median filter to an input image
  * image: gsl_matrix with the original image
@@ -87,13 +82,13 @@ Image *median_filter(Image *image, int window_size)
     // Image filtered;
     CREATE_IMAGE(filtered)
 
-
+    // TODO: definir movimiento de la memoria
     // TODO: separar por esquinas, bordes y centro
     // Iterates over the image to calculate the median values
     // #pragma omp parallel for collapse(2)
-    for (int i = 1; i < IMAGE_M-1; i++)
+    for (int i = 1; i < IMAGE_M - 1; i++)
     {
-        for (int j = 1; j < IMAGE_N-1; j++)
+        for (int j = 1; j < IMAGE_N - 1; j++)
         {
             // int median = get_median_value_center(image, i, j, window_size);
             int x_start = i - window_size;
@@ -104,6 +99,7 @@ Image *median_filter(Image *image, int window_size)
             int neighborhood[NEIGHBORHOOD_SIZE];
             int counter = 0;
             // TODO: eliminar el contador
+            // #pragma omp parallel for
             for (int x = x_start; x <= x_end; x++)
             {
                 for (int y = y_start; y <= y_end; y++)
@@ -120,7 +116,6 @@ Image *median_filter(Image *image, int window_size)
             bubble_sort(NEIGHBORHOOD_SIZE, neighborhood);
             // Gets median value
             int median = neighborhood[NEIGHBORHOOD_SIZE / 2];
-
 
             filtered->data[i][j] = median;
         }
@@ -145,11 +140,11 @@ int process_files(const char *input_directory, int file_amount)
     for (int i = 0; i < file_amount; i++)
     {
         char *filename;
-        asprintf(&filename,  "%s/frame%d.png", input_directory, i);
+        asprintf(&filename, "%s/frame%d.png", input_directory, i);
         // char filename[500];
         // snprintf(filename, 30, "%s/frame%d.png", input_directory, i); // puts string into buffer
 
-        printf("filename: %s\n",filename );
+        printf("filename: %s\n", filename);
         Image *image = read_image(filename);
 
         Image *filtered_image = median_filter(image, 1);
@@ -170,11 +165,10 @@ int main(int argc, char *argv[])
 
     // TODO: validar argumentos
     int i;
-    for ( i = 0; i < argc; i++)
+    for (i = 0; i < argc; i++)
     {
-       printf("argv[%d]: %s\n", i,argv[i]);
+        printf("argv[%d]: %s\n", i, argv[i]);
     }
-    
 
     if (argc != 3)
     {

@@ -2,7 +2,6 @@
 #include <string.h>
 #include <png.h>
 #include <stdlib.h>
-#include "matrix.c"
 #include "image.c"
 
 /**
