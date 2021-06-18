@@ -9,7 +9,7 @@
  * filepath: ruta de la imagen
  * return: matriz de c con la representacion de la imagen
 */
-Image * read_image(char *filepath)
+Image * read_image(Image* image,char *filepath)
 {
     FILE *pFile = fopen(filepath, "rb");
     if (!pFile)
@@ -67,7 +67,7 @@ Image * read_image(char *filepath)
 
     // int **data = createMatrix(width, height);
 
-    CREATE_IMAGE(image)
+    // CREATE_IMAGE(image)
 
     // Lectura de los pixeles
     png_read_image(png_ptr, row_pointers);

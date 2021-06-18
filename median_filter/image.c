@@ -15,6 +15,8 @@
 
 #define FREE_IMAGE(var_name) free(var_name);
 #define CREATE_IMAGE(var_name)  Image *var_name = malloc(sizeof(Image)); memset(var_name->data, 0, IMAGE_N *IMAGE_M * sizeof(int));
+#define MALLOC_IMAGE(image_pointer)     image_pointer = malloc(sizeof(Image)); memset(image_pointer->data, 0, IMAGE_N *IMAGE_M * sizeof(int));
+#define RESET_IMAGE(image_pointer)      memset(image_pointer->data, 0, IMAGE_N *IMAGE_M * sizeof(int));
 
 typedef struct
 {

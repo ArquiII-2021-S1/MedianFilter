@@ -5,6 +5,8 @@
 
 #define WINDOW_SIZE 1
 #define NEIGHBORHOOD_SIZE ((WINDOW_SIZE * 2 + 1) * (WINDOW_SIZE * 2 + 1))
+#define PARALLEL_FILES_TO_LOAD 8
+
 
 struct stat st = {0};
 // TODO: cómo se ejecutaría en el GPU?
@@ -77,10 +79,10 @@ int get_median_value_center(Image *image, int i, int j, int window_size)
  *              4 -> 9 x 9 window 
  * returns: gsl_matrix with the filtered image
 */
-Image *median_filter(Image *image, int window_size)
+void median_filter(Image *input_image,Image *filtered_image , int window_size)
 {
     // Image filtered;
-    CREATE_IMAGE(filtered)
+    // CREATE_IMAGE(filtered)
 
     // TODO: definir movimiento de la memoria
     // TODO: separar por esquinas, bordes y centro
@@ -105,7 +107,7 @@ Image *median_filter(Image *image, int window_size)
                 for (int y = y_start; y <= y_end; y++)
                 {
                     // Get the (x,y) pixel
-                    int pixel = image->data[x][y];
+                    int pixel = input_image->data[x][y];
 
                     // Stores it in the neighborhood
                     neighborhood[counter] = pixel;
@@ -116,12 +118,9 @@ Image *median_filter(Image *image, int window_size)
             bubble_sort(NEIGHBORHOOD_SIZE, neighborhood);
             // Gets median value
             int median = neighborhood[NEIGHBORHOOD_SIZE / 2];
-
-            filtered->data[i][j] = median;
+            filtered_image->data[i][j] = median;
         }
     }
-
-    return filtered;
 }
 
 int process_files(const char *input_directory, int file_amount)
@@ -135,27 +134,64 @@ int process_files(const char *input_directory, int file_amount)
     // double start_time, run_time;
     // start_time = omp_get_wtime();
 
-    // Iterates over the image to calculate the median values
-    // #pragma omp parallel for
-    for (int i = 0; i < file_amount; i++)
+
+    // Image *input_images[PARALLEL_FILES_TO_LOAD];
+    Image (*input_images)[PARALLEL_FILES_TO_LOAD] = malloc(sizeof(*input_images));
+    for (int i = 0; i < PARALLEL_FILES_TO_LOAD; i++)
     {
-        char *filename;
-        asprintf(&filename, "%s/frame%d.png", input_directory, i);
-        // char filename[500];
-        // snprintf(filename, 30, "%s/frame%d.png", input_directory, i); // puts string into buffer
-
-        printf("filename: %s\n", filename);
-        Image *image = read_image(filename);
-
-        Image *filtered_image = median_filter(image, 1);
-
-        snprintf(filename, 30, "../filtered/frame%d.png", i); // puts string into buffer
-        write_image(filename, filtered_image);
-
-        FREE_IMAGE(image)
-        FREE_IMAGE(filtered_image)
-        printf("Frame %d procesado.\n", i);
+        // printf("DATA 0 0\n",input_images[i]->data[0][0]);
+        Image * imageptr;
+        imageptr= &(*input_images)[i];
+        RESET_IMAGE(  imageptr )
     }
+
+    Image (*filtered_images)[PARALLEL_FILES_TO_LOAD] = malloc(sizeof(*filtered_images));
+    for (int i = 0; i < PARALLEL_FILES_TO_LOAD; i++)
+    {
+        Image * imageptr;
+        imageptr= &(*filtered_images)[i];
+        RESET_IMAGE(imageptr)
+    }
+    
+    // TODO: definir tandas de PARALLEL_FILES_TO_LOAD
+    // cargar archivos
+    int batches = file_amount/PARALLEL_FILES_TO_LOAD;
+    for (int batches_c = 0; batches_c < batches; batches_c++)
+    {
+        // cargar imagenes
+        //  #pragma omp parallel for
+        for (int files_c = 0; files_c < PARALLEL_FILES_TO_LOAD; files_c++)
+        {
+            int file_numer=files_c+batches_c*PARALLEL_FILES_TO_LOAD;
+            char *filename;
+            asprintf(&filename, "%s/frame%d.png", input_directory, file_numer);
+            printf("filename: %s\n", filename);
+            Image *image = read_image( &(*filtered_images)[files_c],filename);
+        }
+
+        // procesar imagenes
+        //  #pragma omp parallel for
+        for (int filter_c = 0; filter_c < PARALLEL_FILES_TO_LOAD; filter_c++)
+        {
+            
+            median_filter(&(*filtered_images)[filter_c],&(*filtered_images)[filter_c] , 1);
+            printf("Frame %d procesado.\n", filter_c);
+        }
+
+        // guardar imagenes
+        //  #pragma omp parallel for
+        for (int file_write_c = 0; file_write_c < PARALLEL_FILES_TO_LOAD; file_write_c++)
+        {
+            int file_numer=file_write_c+batches_c*PARALLEL_FILES_TO_LOAD;
+            char *filename;
+            asprintf(&filename, "../filtered/frame%d.png", file_numer);
+            write_image(filename, &(*filtered_images)[file_write_c]);
+            printf("Frame %d guardado.\n", file_write_c);
+        }
+    }
+
+    free(filtered_images);
+    free(input_images);
 }
 
 // ./median_filter ../../frame 5
@@ -181,7 +217,17 @@ int main(int argc, char *argv[])
     int num = atol(num_arg);
 
     printf("input_directory_arg: %s\n", input_directory_arg);
-    process_files(input_directory_arg, num);
+
+    if (num%PARALLEL_FILES_TO_LOAD==0 & num!=0)
+    {
+        process_files(input_directory_arg, num);
+    }
+    else{
+        printf("number of files to process must be multiple of %d \n",PARALLEL_FILES_TO_LOAD);
+    }
+    
+
+    
 
     // run_time = omp_get_wtime() - start_time;
     // printf("Tiempo: %f\n", run_time);
@@ -193,3 +239,24 @@ int main(int argc, char *argv[])
 // real	0m27,339s
 // user	0m27,041s
 // sys	0m0,220s
+
+
+// 40 b10 sin opm 
+// real	2m39,078s
+// user	2m37,570s
+// sys	0m0,777s
+
+// 40 b40 sin opm 
+// real	2m46,327s
+// user	2m42,713s
+// sys	0m2,527s
+
+
+// 40 b40 con opm 
+// real	2m55,529s
+// user	15m56,011s
+// sys	5m37,601s
+
+// 40 b10 con opm 
+
+// 40 b8 con opm 
