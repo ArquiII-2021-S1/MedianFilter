@@ -2,12 +2,8 @@
 #include <string.h>
 #include <png.h>
 #include <stdlib.h>
-
 #include "matrix.c"
 #include "image.c"
-
-
-
 
 /**
  * Funcion leer una imagen png
@@ -86,13 +82,6 @@ Image * read_image(char *filepath)
             image->data[x][y] = pixel[0];
         }
     }
-
-    // Creacion del struct que almacena la imagen
-    // Image * image;
-    // // TODO: cambiar
-    // // image.data = data;
-    // image.rows = width;
-    // image.cols = height;
 
     // Limpieza de memoria
     fclose(pFile);
@@ -177,4 +166,3 @@ void write_image(char *filename, Image *image)
     png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
     free(row);
 }
-
