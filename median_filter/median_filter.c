@@ -45,16 +45,16 @@ int get_median_value(Image*image, int i, int j, int window_size)
         x_start = 0; // Check left limit
 
     int x_end = i + window_size;
-    if (x_end >= image->rows)
-        x_end = image->rows - 1; // Check right limit
+    if (x_end >= IMAGE_M)
+        x_end = IMAGE_M - 1; // Check right limit
 
     int y_start = j - window_size;
     if (y_start < 0)
         y_start = 0; // Check top limit
 
     int y_end = j + window_size;
-    if (y_end >= image->cols)
-        y_end = image->cols - 1; // Check down limit
+    if (y_end >= IMAGE_N)
+        y_end = IMAGE_N - 1; // Check down limit
 
     int elements = (x_end - x_start + 1) * (y_end - y_start + 1);
     int *neighborhood = (int *)malloc(sizeof(int) * elements);
@@ -105,9 +105,9 @@ Image * median_filter(Image *image, int window_size)
 
 
 // Iterates over the image to calculate the median values
-        for (int i = 0; i < image->rows; i++)
+        for (int i = 0; i < IMAGE_M; i++)
         {
-            for (int j = 0; j < image->cols; j++)
+            for (int j = 0; j < IMAGE_N; j++)
             {
                 int median = get_median_value(image, i, j, window_size);
 
@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
 
     // Image * newImage=malloc(sizeof(Image));
     CREATE_IMAGE(newImage);
-    printf("cols:%d \n", newImage->cols);
+    printf("cols:%d \n", IMAGE_N);
     // CREATE_IMAGE(newimage);
     process_files(input_directory_arg,num);
 

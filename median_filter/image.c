@@ -7,19 +7,18 @@
 
 
 #ifndef IMAGE_N
-#define IMAGE_N 2160
+#define IMAGE_N 2160 //COLS
 #endif // !IMAGE_N
 
 #ifndef IMAGE_M
-#define IMAGE_M 3840
+#define IMAGE_M 3840 //ROWS
 #endif // !IMAGE_N
 
-#define CREATE_IMAGE(var_name)               \
-    Image *var_name = malloc(sizeof(Image)); \
-    var_name->cols = IMAGE_N;                \
-    var_name->rows = IMAGE_M;                \
-    memset(var_name->data, 0, IMAGE_N *IMAGE_M * sizeof(int));
 #define FREE_IMAGE(var_name) free(var_name);
+#define CREATE_IMAGE(var_name)  Image *var_name = malloc(sizeof(Image)); memset(var_name->data, 0, IMAGE_N *IMAGE_M * sizeof(int));
+
+    // var_name->cols = IMAGE_N;                \
+    // var_name->rows = IMAGE_M;                \
 
 // image_name.cols=IMAGE_N;  image_name.rows=IMAGE_M;
 
@@ -29,7 +28,7 @@ typedef struct
 {
     int data[IMAGE_M][IMAGE_N];
     // int **data;
-    int rows, cols;
+    // int rows, cols;
 } Image;
 
 // Image createImage(){
