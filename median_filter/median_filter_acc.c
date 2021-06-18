@@ -101,8 +101,6 @@ Image median_filter(Image image, int window_size)
     filtered.cols = image.cols;
 
     // Iterates over the image to calculate the median values
-#pragma acc data copy(image), create(filtered)
-#pragma acc kernels
     for (int i = 0; i < image.rows; i++)
     {
         for (int j = 0; j < image.cols; j++)
@@ -124,12 +122,12 @@ int main()
         mkdir("../filtered", 0700);
     }
 
-    /*
+    
     double start_time, run_time;
-    start_time = omp_get_wtime();*/
+    start_time = omp_get_wtime();
 
     // Iterates over the image to calculate the median values
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 6; i++)
     {
         char filename[30];
 
@@ -148,8 +146,8 @@ int main()
     }
 
 
-    /*run_time = omp_get_wtime() - start_time;
-    printf("Tiempo: %f\n", run_time);*/
+    run_time = omp_get_wtime() - start_time;
+    printf("Tiempo: %f\n", run_time);
     
     return 0;
 }

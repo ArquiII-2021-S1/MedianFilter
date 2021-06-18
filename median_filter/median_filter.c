@@ -133,7 +133,7 @@ int main()
     //{
     // Iterates over the image to calculate the median values
     //#pragma omp for
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 6; i++)
     {
         char filename[30];
 
