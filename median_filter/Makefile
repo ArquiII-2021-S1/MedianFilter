@@ -5,7 +5,7 @@ LDLIBS = -lpng -fopenmp
 # IMAGE_N=15
 # IMAGE_M=10
 
-PROGRAMS= median_filter median-filter-omp-cpu median-filter-omp-gpu
+PROGRAMS= median_filter median-filter-omp-cpu median-filter-omp-gpu median-filter-oacc-cpu
 
 
 all: $(PROGRAMS)
@@ -18,6 +18,10 @@ median-filter-omp-cpu: median-filter-omp-cpu.c
 
 median-filter-omp-gpu: median-filter-omp-gpu.c
 	nvc -mp=gpu median-filter-omp-gpu.c $(LDLIBS) -o median-filter-omp-gpu
+
+median-filter-oacc-cpu: median-filter-oacc-cpu.c
+	nvc -acc=multicore median-filter-oacc-cpu.c $(LDLIBS) -o median-filter-oacc-cpu
+
 
 clean:
 	$(RM) *.o $(PROGRAMS) &> /dev/null || true
