@@ -130,7 +130,8 @@ int process_files(const char *input_directory, int file_amount)
     {
         mkdir("../filtered", 0700);
     }
-    
+
+
     // Image *input_images[PARALLEL_FILES_TO_LOAD];
     Image (*input_images)[PARALLEL_FILES_TO_LOAD] = malloc(sizeof(*input_images));
     for (int i = 0; i < PARALLEL_FILES_TO_LOAD; i++)
@@ -149,6 +150,7 @@ int process_files(const char *input_directory, int file_amount)
         RESET_IMAGE(imageptr)
     }
     
+
     double full_time = 0;
     // TODO: definir tandas de PARALLEL_FILES_TO_LOAD
     // cargar archivos
@@ -168,7 +170,10 @@ int process_files(const char *input_directory, int file_amount)
 
         double start_time, run_time;
         start_time = omp_get_wtime();
+
         // procesar imagenes
+
+        #pragma omp parallel for
         for (int filter_c = 0; filter_c < PARALLEL_FILES_TO_LOAD; filter_c++)
         {
             
@@ -190,8 +195,8 @@ int process_files(const char *input_directory, int file_amount)
             printf("Frame %d guardado.\n", file_write_c);
         }
     }
-
     printf("Tiempo: %f\n", full_time);
+
 
     free(filtered_images);
     free(input_images);
@@ -233,29 +238,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
-// 6 sin ifs
-// real	0m27,339s
-// user	0m27,041s
-// sys	0m0,220s
-
-
-// 40 b10 sin opm 
-// real	2m39,078s
-// user	2m37,570s
-// sys	0m0,777s
-
-// 40 b40 sin opm 
-// real	2m46,327s
-// user	2m42,713s
-// sys	0m2,527s
-
-
-// 40 b40 con opm 
-// real	2m55,529s
-// user	15m56,011s
-// sys	5m37,601s
-
-// 40 b10 con opm 
-
-// 40 b8 con opm 
