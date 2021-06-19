@@ -40,6 +40,7 @@ void bubble_sort(int n, int *array)
  *              4 -> 9 x 9 window 
  * returns: median value
 */
+//#pragma acc routine
 int get_median_value_center(Image *image, int i, int j, int window_size)
 {
     int x_start = i - window_size;
@@ -84,18 +85,16 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
 {
     // Image filtered;
     // CREATE_IMAGE(filtered)
-    int runningOnGPU = 0;
     // TODO: definir movimiento de la memoria
     // TODO: separar por esquinas, bordes y centro
     // Iterates over the image to calculate the median values
-#pragma omp target map(to:input_image->data[:IMAGE_M][:IMAGE_N]) map(tofrom:filtered_image->data[:IMAGE_M][:IMAGE_N]) map(from:runningOnGPU)
-{   
-    if (omp_is_initial_device() == 0)
-        runningOnGPU = 1;
+//#pragma acc data copyin(input_image->data) copyout(filtered_image->data)
+//{
+    #pragma acc loop independent collapse(2)
 
-    #pragma omp parallel for collapse(2)
+    //#pragma acc kernels 
     for (int i = 1; i < IMAGE_M - 1; i++)
-    {
+    {   
         for (int j = 1; j < IMAGE_N - 1; j++)
         {
             // int median = get_median_value_center(image, i, j, window_size);
@@ -107,6 +106,7 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
             int neighborhood[NEIGHBORHOOD_SIZE];
             int counter = 0;
             // TODO: eliminar el contador
+            #pragma acc loop seq private(neighborhood)
             for (int x = x_start; x <= x_end; x++)
             {
                 for (int y = y_start; y <= y_end; y++)
@@ -126,12 +126,7 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
             filtered_image->data[i][j] = median;
         }
     }
-}
-    /* If still running on CPU, GPU must not be available */
-    if (runningOnGPU)
-        printf("### Able to use the GPU! ### \n");
-    else
-        printf("### Unable to use the GPU, using CPU! ###\n");
+//}
 }
 
 int process_files(const char *input_directory, int file_amount)
