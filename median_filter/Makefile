@@ -10,8 +10,12 @@ PROGRAMS= median_filter median-filter-omp-cpu median-filter-omp-gpu median-filte
 
 all: $(PROGRAMS)
 
+test: median_filter run
+
 median_filter: median_filter.c
-	nvc median_filter.c $(LDLIBS) -o median_filter
+	gcc median_filter.c -lpng -fopenmp -o median_filter_serial -std=c99
+run:
+	./median_filter_serial ../../video 16
 
 median-filter-omp-cpu: median-filter-omp-cpu.c
 	nvc -mp=multicore median-filter-omp-cpu.c $(LDLIBS) -o median-filter-omp-cpu
@@ -29,4 +33,6 @@ median-filter-oacc-gpu: median-filter-oacc-gpu.c
 clean:
 	$(RM) *.o $(PROGRAMS) &> /dev/null || true
 
-
+cpu-omp:
+	gcc median-filter-omp-cpu.c $(LDLIBS) -o  median-filter-omp-cpu -std=c99
+	sbatch media.slurm 

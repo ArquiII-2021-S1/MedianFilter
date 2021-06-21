@@ -206,7 +206,7 @@ int process_files(const char *input_directory, int file_amount)
 // ./median_filter ../../frame 5
 int main(int argc, char *argv[])
 {
-    // printf("ARGC: %d\n", argc);
+    printf("Max threads: %d\n", omp_get_max_threads());
 
     // TODO: validar argumentos
     int i;

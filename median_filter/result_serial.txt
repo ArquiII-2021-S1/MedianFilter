@@ -1,0 +1,55 @@
+Median filter serial 
+ num_threads = 1 
+argv[0]: /home/curso-607/projects/MedianFilter/median_filter/./median_filter_serial
+argv[1]: ../../video
+argv[2]: 16
+input_directory_arg: ../../video
+filename: ../../video/frame0.png
+filename: ../../video/frame12.png
+filename: ../../video/frame8.png
+filename: ../../video/frame4.png
+filename: ../../video/frame1.png
+filename: ../../video/frame9.png
+filename: ../../video/frame5.png
+filename: ../../video/frame13.png
+filename: ../../video/frame2.png
+filename: ../../video/frame6.png
+filename: ../../video/frame10.png
+filename: ../../video/frame14.png
+filename: ../../video/frame3.png
+filename: ../../video/frame7.png
+filename: ../../video/frame11.png
+filename: ../../video/frame15.png
+Frame 0 procesado.
+Frame 1 procesado.
+Frame 2 procesado.
+Frame 3 procesado.
+Frame 4 procesado.
+Frame 5 procesado.
+Frame 6 procesado.
+Frame 7 procesado.
+Frame 8 procesado.
+Frame 9 procesado.
+Frame 10 procesado.
+Frame 11 procesado.
+Frame 12 procesado.
+Frame 13 procesado.
+Frame 14 procesado.
+Frame 15 procesado.
+Frame 0 guardado.
+Frame 4 guardado.
+Frame 8 guardado.
+Frame 12 guardado.
+Frame 5 guardado.
+Frame 1 guardado.
+Frame 13 guardado.
+Frame 9 guardado.
+Frame 6 guardado.
+Frame 2 guardado.
+Frame 10 guardado.
+Frame 14 guardado.
+Frame 3 guardado.
+Frame 7 guardado.
+Frame 15 guardado.
+Frame 11 guardado.
+Tiempo: 29.045985

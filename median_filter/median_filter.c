@@ -202,7 +202,9 @@ int process_files(const char *input_directory, int file_amount)
 // ./median_filter ../../frame 5
 int main(int argc, char *argv[])
 {
-    // printf("ARGC: %d\n", argc);
+    printf("Median filter serial \n");
+    omp_set_num_threads(2);
+    printf("Num_threads = %d \n",omp_get_num_threads());
 
     // TODO: validar argumentos
     int i;
