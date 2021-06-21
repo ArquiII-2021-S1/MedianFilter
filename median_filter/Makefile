@@ -23,7 +23,7 @@ median-filter-oacc-cpu: median-filter-oacc-cpu.c
 	nvc -acc=multicore median-filter-oacc-cpu.c $(LDLIBS) -o median-filter-oacc-cpu
 
 median-filter-oacc-gpu: median-filter-oacc-gpu.c
-	nvc -acc -gpu=cuda11.3 -Minfo=accel median-filter-oacc-gpu.c $(LDLIBS) -o median-filter-oacc-gpu
+	nvc -acc -Minfo=accel median-filter-oacc-gpu.c $(LDLIBS) -o median-filter-oacc-gpu
 
 
 clean:

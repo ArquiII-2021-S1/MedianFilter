@@ -6,7 +6,11 @@
 
 #define WINDOW_SIZE 1
 #define NEIGHBORHOOD_SIZE ((WINDOW_SIZE * 2 + 1) * (WINDOW_SIZE * 2 + 1))
-#define PARALLEL_FILES_TO_LOAD 32
+#define PARALLEL_FILES_TO_LOAD 16
+
+
+int image[IMAGE_M][IMAGE_N];
+int filtered[IMAGE_M][IMAGE_N];
 
 
 struct stat st = {0};
@@ -88,14 +92,27 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
     // TODO: definir movimiento de la memoria
     // TODO: separar por esquinas, bordes y centro
     // Iterates over the image to calculate the median values
-//#pragma acc data copyin(input_image->data) copyout(filtered_image->data)
-//{
-    #pragma acc loop independent collapse(2)
 
-    //#pragma acc kernels 
-    for (int i = 1; i < IMAGE_M - 1; i++)
+    const int m = IMAGE_M;
+    const int n = IMAGE_N;
+    memset(image, 0, m * n * sizeof(int));
+    memset(filtered, 0, m * n * sizeof(int));
+
+    for (int i = 1; i < m - 1; i++)
+    {
+        for (int j = 1; j < n - 1; j++)
+        {   
+            image[i][j] = input_image->data[i][j];
+            //filtered[i][j] = filtered_image->data[i][j];
+        } 
+    }
+
+#pragma acc data copy(image), create(filtered)
+
+#pragma acc kernels
+    for (int i = 1; i < m - 1; i++)
     {   
-        for (int j = 1; j < IMAGE_N - 1; j++)
+        for (int j = 1; j < n - 1; j++)
         {
             // int median = get_median_value_center(image, i, j, window_size);
             int x_start = i - window_size;
@@ -106,13 +123,14 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
             int neighborhood[NEIGHBORHOOD_SIZE];
             int counter = 0;
             // TODO: eliminar el contador
-            #pragma acc loop seq private(neighborhood)
+            #pragma acc loop independent
             for (int x = x_start; x <= x_end; x++)
             {
+                #pragma acc loop independent
                 for (int y = y_start; y <= y_end; y++)
                 {
                     // Get the (x,y) pixel
-                    int pixel = input_image->data[x][y];
+                    int pixel = image[x][y];
 
                     // Stores it in the neighborhood
                     neighborhood[counter] = pixel;
@@ -123,10 +141,18 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
             bubble_sort(NEIGHBORHOOD_SIZE, neighborhood);
             // Gets median value
             int median = neighborhood[NEIGHBORHOOD_SIZE / 2];
-            filtered_image->data[i][j] = median;
+            filtered[i][j] = median;
         }
     }
-//}
+
+    for (int i = 1; i < m - 1; i++)
+    {
+        for (int j = 1; j < n - 1; j++)
+        {   
+            filtered_image->data[i][j] = filtered[i][j];
+        } 
+    }
+
 }
 
 int process_files(const char *input_directory, int file_amount)
@@ -180,7 +206,6 @@ int process_files(const char *input_directory, int file_amount)
         // procesar imagenes
         for (int filter_c = 0; filter_c < PARALLEL_FILES_TO_LOAD; filter_c++)
         {
-            
             median_filter(&(*filtered_images)[filter_c],&(*filtered_images)[filter_c] , 1);
             printf("Frame %d procesado.\n", filter_c);
         }
