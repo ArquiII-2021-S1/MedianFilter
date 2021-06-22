@@ -68,3 +68,16 @@ dkms.conf
 
 # Local History for Visual Studio Code
 .history/
+
+#compiled bins
+median_filter_serial
+median-filter-omp-cpu
+median-filter-omp-gpu 
+median-filter-oacc-cpu
+median-filter-oacc-gpu
+
+#results
+filtered_serial
+filtered_oacc_cpu
+filtered_oacc_gpu
+*.txt

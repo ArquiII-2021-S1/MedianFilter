@@ -15,6 +15,7 @@ int filtered[IMAGE_M][IMAGE_N];
 
 struct stat st = {0};
 // TODO: cómo se ejecutaría en el GPU?
+#pragma acc routine seq
 void bubble_sort(int n, int *array)
 {
     int temp;
@@ -107,8 +108,8 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
         } 
     }
 
-#pragma acc data copy(image), create(filtered)
-
+#pragma acc data copyin(image) copy(filtered)
+{
 #pragma acc kernels
     for (int i = 1; i < m - 1; i++)
     {   
@@ -123,10 +124,10 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
             int neighborhood[NEIGHBORHOOD_SIZE];
             int counter = 0;
             // TODO: eliminar el contador
-            #pragma acc loop independent
+            //#pragma acc loop independent
             for (int x = x_start; x <= x_end; x++)
             {
-                #pragma acc loop independent
+                //#pragma acc loop independent
                 for (int y = y_start; y <= y_end; y++)
                 {
                     // Get the (x,y) pixel
@@ -144,7 +145,7 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
             filtered[i][j] = median;
         }
     }
-
+}
     for (int i = 1; i < m - 1; i++)
     {
         for (int j = 1; j < n - 1; j++)
@@ -158,9 +159,9 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
 int process_files(const char *input_directory, int file_amount)
 {
     // Creates Filtered folder if it doesnt exist
-    if (stat("../filtered", &st) == -1)
+    if (stat("../filtered_oacc_gpu", &st) == -1)
     {
-        mkdir("../filtered", 0700);
+        mkdir("../filtered_oacc_gpu", 0700);
     }
 
 
@@ -219,7 +220,7 @@ int process_files(const char *input_directory, int file_amount)
         {
             int file_numer=file_write_c+batches_c*PARALLEL_FILES_TO_LOAD;
             char *filename;
-            asprintf(&filename, "../filtered/frame%d.png", file_numer);
+            asprintf(&filename, "../filtered_oacc_gpu/frame%d.png", file_numer);
             write_image(filename, &(*filtered_images)[file_write_c]);
             printf("Frame %d guardado.\n", file_write_c);
         }

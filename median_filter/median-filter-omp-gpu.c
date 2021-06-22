@@ -137,9 +137,9 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
 int process_files(const char *input_directory, int file_amount)
 {
     // Creates Filtered folder if it doesnt exist
-    if (stat("../filtered", &st) == -1)
+    if (stat("../filtered_opm_gpu", &st) == -1)
     {
-        mkdir("../filtered", 0700);
+        mkdir("../filtered_opm_gpu", 0700);
     }
 
 
@@ -199,7 +199,7 @@ int process_files(const char *input_directory, int file_amount)
         {
             int file_numer=file_write_c+batches_c*PARALLEL_FILES_TO_LOAD;
             char *filename;
-            asprintf(&filename, "../filtered/frame%d.png", file_numer);
+            asprintf(&filename, "../filtered_opm_gpu/frame%d.png", file_numer);
             write_image(filename, &(*filtered_images)[file_write_c]);
             printf("Frame %d guardado.\n", file_write_c);
         }
