@@ -6,7 +6,7 @@
 
 #define WINDOW_SIZE 1
 #define NEIGHBORHOOD_SIZE ((WINDOW_SIZE * 2 + 1) * (WINDOW_SIZE * 2 + 1))
-#define PARALLEL_FILES_TO_LOAD 32
+#define PARALLEL_FILES_TO_LOAD 16
 
 
 struct stat st = {0};

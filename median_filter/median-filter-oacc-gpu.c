@@ -8,13 +8,12 @@
 #define NEIGHBORHOOD_SIZE ((WINDOW_SIZE * 2 + 1) * (WINDOW_SIZE * 2 + 1))
 #define PARALLEL_FILES_TO_LOAD 16
 
-
 int image[IMAGE_M][IMAGE_N];
 int filtered[IMAGE_M][IMAGE_N];
 
-
 struct stat st = {0};
-// TODO: cómo se ejecutaría en el GPU?
+
+#pragma acc routine seq
 void bubble_sort(int n, int *array)
 {
     int temp;
@@ -33,49 +32,6 @@ void bubble_sort(int n, int *array)
     }
 }
 
-/**
- * This function searchs the median value for a specific pixel in (i,j)
- * image: gsl_matrix with the original image
- * i: position in x of the central pixel
- * j: position in y of the central pixel
- * window_size: 1 -> 3 x 3 window
- *              2 -> 5 x 5 window
- *              3 -> 7 x 7 window
- *              4 -> 9 x 9 window 
- * returns: median value
-*/
-//#pragma acc routine
-int get_median_value_center(Image *image, int i, int j, int window_size)
-{
-    int x_start = i - window_size;
-    int x_end = i + window_size;
-    int y_start = j - window_size;
-    int y_end = j + window_size;
-
-    int neighborhood[NEIGHBORHOOD_SIZE];
-
-    int counter = 0;
-
-    for (int x = x_start; x <= x_end; x++)
-    {
-        for (int y = y_start; y <= y_end; y++)
-        {
-            // Get the (x,y) pixel
-            int pixel = image->data[x][y];
-
-            // Stores it in the neighborhood
-            neighborhood[counter] = pixel;
-            counter++;
-        }
-    }
-    // Sorts the elements of neighborhood into ascending numerical order
-    bubble_sort(NEIGHBORHOOD_SIZE, neighborhood);
-    // Gets median value
-    int median = neighborhood[NEIGHBORHOOD_SIZE / 2];
-
-    return median;
-}
-
 /** 
  * This function applies the median filter to an input image
  * image: gsl_matrix with the original image
@@ -87,12 +43,6 @@ int get_median_value_center(Image *image, int i, int j, int window_size)
 */
 void median_filter(Image *input_image,Image *filtered_image , int window_size)
 {
-    // Image filtered;
-    // CREATE_IMAGE(filtered)
-    // TODO: definir movimiento de la memoria
-    // TODO: separar por esquinas, bordes y centro
-    // Iterates over the image to calculate the median values
-
     const int m = IMAGE_M;
     const int n = IMAGE_N;
     memset(image, 0, m * n * sizeof(int));
@@ -107,9 +57,10 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
         } 
     }
 
-#pragma acc data copy(image), create(filtered)
-
-#pragma acc kernels
+#pragma acc data copyin(image) copy(filtered)
+{
+    // Iterates over the image to calculate the median values
+    #pragma acc kernels
     for (int i = 1; i < m - 1; i++)
     {   
         for (int j = 1; j < n - 1; j++)
@@ -122,11 +73,8 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
 
             int neighborhood[NEIGHBORHOOD_SIZE];
             int counter = 0;
-            // TODO: eliminar el contador
-            #pragma acc loop independent
             for (int x = x_start; x <= x_end; x++)
             {
-                #pragma acc loop independent
                 for (int y = y_start; y <= y_end; y++)
                 {
                     // Get the (x,y) pixel
@@ -144,6 +92,7 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
             filtered[i][j] = median;
         }
     }
+}   
 
     for (int i = 1; i < m - 1; i++)
     {
@@ -152,6 +101,7 @@ void median_filter(Image *input_image,Image *filtered_image , int window_size)
             filtered_image->data[i][j] = filtered[i][j];
         } 
     }
+
 
 }
 
@@ -184,7 +134,6 @@ int process_files(const char *input_directory, int file_amount)
     
 
     double full_time = 0;
-    // TODO: definir tandas de PARALLEL_FILES_TO_LOAD
     // cargar archivos
     int batches = file_amount/PARALLEL_FILES_TO_LOAD;
     for (int batches_c = 0; batches_c < batches; batches_c++)
@@ -233,9 +182,9 @@ int process_files(const char *input_directory, int file_amount)
     return 0;
 }
 
-// ./median_filter ../../frame 5
 int main(int argc, char *argv[])
 {
+    printf("Filtro con OpenACC GPU");
     // printf("ARGC: %d\n", argc);
 
     // TODO: validar argumentos
