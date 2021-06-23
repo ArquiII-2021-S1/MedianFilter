@@ -21,10 +21,15 @@ median-filter-omp-cpu: median-filter-omp-cpu.c
 
 median-filter-omp-gpu: median-filter-omp-gpu.c
 	nvc median-filter-omp-gpu.c $(LDLIBS) -o median-filter-omp-gpu  -std=c99
+#   nvc -mp -ta=tesla median-filter-omp-gpu.c -lpng -o median-filter-omp-gpu -std=c99
+# 	nvc -mp -ta=tesla,cc70 median-filter-omp-gpu.c -lpng -o median-filter-omp-gpu -std=c99
+#   nvc -mp -ta=tesla,cc70 median-filter-omp-gpu.c -lpng -o median-filter-omp-gpu -std=c99
+
 
 median-filter-oacc-cpu: median-filter-oacc-cpu.c
 	nvc -acc=multicore median-filter-oacc-cpu.c $(LDLIBS) -o median-filter-oacc-cpu
 
+# probado
 median-filter-oacc-gpu: median-filter-oacc-gpu.c
 	nvc -acc -Minfo=accel median-filter-oacc-gpu.c $(LDLIBS) -o median-filter-oacc-gpu
 
