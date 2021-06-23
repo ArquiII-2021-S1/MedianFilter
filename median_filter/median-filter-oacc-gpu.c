@@ -6,7 +6,7 @@
 
 #define WINDOW_SIZE 1
 #define NEIGHBORHOOD_SIZE ((WINDOW_SIZE * 2 + 1) * (WINDOW_SIZE * 2 + 1))
-#define PARALLEL_FILES_TO_LOAD 16
+#define PARALLEL_FILES_TO_LOAD 4
 
 int image[IMAGE_M][IMAGE_N];
 int filtered[IMAGE_M][IMAGE_N];

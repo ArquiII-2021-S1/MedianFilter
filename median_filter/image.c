@@ -3,8 +3,6 @@
 // #define IMAGE_N 3840
 // #define IMAGE_M 2160
 
-
-
 #ifndef IMAGE_N
 #define IMAGE_N 2160 //COLS
 #endif // !IMAGE_N
