@@ -17,10 +17,10 @@ median_filter: median_filter.c
 	gcc median_filter.c -lpng -fopenmp -o median_filter_serial -std=c99
 
 median-filter-omp-cpu: median-filter-omp-cpu.c
-	nvc -mp=multicore median-filter-omp-cpu.c $(LDLIBS) -o median-filter-omp-cpu
+	nvc -mp=multicore median-filter-omp-cpu.c $(LDLIBS) -o median-filter-omp-cpu  -std=c99
 
 median-filter-omp-gpu: median-filter-omp-gpu.c
-	nvc -mp=gpu median-filter-omp-gpu.c $(LDLIBS) -o median-filter-omp-gpu
+	nvc median-filter-omp-gpu.c $(LDLIBS) -o median-filter-omp-gpu  -std=c99
 
 median-filter-oacc-cpu: median-filter-oacc-cpu.c
 	nvc -acc=multicore median-filter-oacc-cpu.c $(LDLIBS) -o median-filter-oacc-cpu
@@ -45,13 +45,13 @@ test-serial:
 	sbatch test-serial.slurm 
 	watch -n 2 squeue -n median_filter_serial
 
-test-opm-cpu:
+test-omp-cpu:
 	gcc median-filter-omp-cpu.c $(LDLIBS) -o median-filter-omp-cpu -std=c99
 	sbatch test-omp-cpu.slurm
 	watch -n 2 squeue -n median-filter-omp-cpu
 
-test-opm-gpu:
-	gcc median-filter-omp-gpu.c $(LDLIBS) -o median-filter-omp-gpu -std=c99
+test-omp-gpu:
+	nvc -mp -ta=tesla,cc35 median-filter-omp-gpu.c -lpng -o median-filter-omp-gpu -std=c99
 	sbatch test-omp-gpu.slurm
 	watch -n 2 squeue -n median-filter-omp-gpu
 
@@ -61,7 +61,7 @@ test-oacc-cpu:
 	watch -n 2 squeue -n median-filter-oacc-cpu
 
 test-oacc-gpu:
-	pgcc -lpng -ta=tesla median-filter-oacc-gpu.c -o median-filter-oacc-gpu 
+	pgcc -acc=gpu -ta=tesla,cc70 median-filter-oacc-gpu.c  -lpng -o median-filter-oacc-gpu 
 	sbatch test-oacc-gpu.slurm
 	watch -n 2 squeue -n median-filter-oacc-gpu
 
@@ -76,5 +76,15 @@ test-clean:
 
 gprof-median-serial:
 	gcc -pg -O0 -g median_filter.c -lpng -fopenmp -o median_filter_serial -std=c99
-	./median_filter_serial ../../video 16
-	gprof median_filter_serial gmon.out > analysis-serial.txt
+	./median_filter_serial ../../video 240
+	gprof -a -b median_filter_serial gmon.out > analysis-serial.txt
+
+gprof-opm-cpu:
+	gcc -pg -O0 -g median-filter-omp-cpu.c $(LDLIBS) -o median-filter-omp-cpu -std=c99
+	./median-filter-omp-cpu ../../video 16
+	gprof -a -b median-filter-omp-cpu gmon.out > analysis-omp-cpu.txt
+gprof-omp-gpu:
+	gcc median-filter-omp-gpu.c $(LDLIBS) -o median-filter-omp-gpu -std=c99
+	
+
+
