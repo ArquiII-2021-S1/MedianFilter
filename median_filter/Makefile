@@ -72,3 +72,9 @@ test-clean:
 	rm median-filter-omp-gpu 
 	rm median-filter-oacc-cpu
 	rm median-filter-oacc-gpu
+
+
+gprof-median-serial:
+	gcc -pg -O0 -g median_filter.c -lpng -fopenmp -o median_filter_serial -std=c99
+	./median_filter_serial ../../video 16
+	gprof median_filter_serial gmon.out > analysis-serial.txt
